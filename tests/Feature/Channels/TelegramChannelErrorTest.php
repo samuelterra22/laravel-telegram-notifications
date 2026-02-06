@@ -254,3 +254,159 @@ it('includes topic_id in params when set on message', function () {
 
     Http::assertSent(fn ($request) => $request['message_thread_id'] === '42');
 });
+
+it('non-TelegramMessage types skip splitContent logic', function () {
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]]),
+    ]);
+
+    $channel = app(TelegramChannel::class);
+
+    $notifiable = new class
+    {
+        public function routeNotificationFor(string $driver): string
+        {
+            return '-100123';
+        }
+    };
+
+    $notification = new class extends Notification
+    {
+        public function toTelegram(mixed $notifiable): TelegramPhoto
+        {
+            return TelegramPhoto::create()
+                ->photo('https://example.com/img.jpg')
+                ->caption('A caption');
+        }
+    };
+
+    $result = $channel->send($notifiable, $notification);
+
+    expect($result['ok'])->toBeTrue();
+    Http::assertSentCount(1);
+});
+
+it('chat ID from message takes precedence over notifiable', function () {
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]]),
+    ]);
+
+    $channel = app(TelegramChannel::class);
+
+    $notifiable = new class
+    {
+        public function routeNotificationFor(string $driver): string
+        {
+            return '-100NOTIFIABLE';
+        }
+    };
+
+    $notification = new class extends Notification
+    {
+        public function toTelegram(mixed $notifiable): TelegramMessage
+        {
+            return TelegramMessage::create('Test')->to('-100MESSAGE');
+        }
+    };
+
+    $channel->send($notifiable, $notification);
+
+    Http::assertSent(fn ($request) => $request['chat_id'] === '-100MESSAGE');
+});
+
+it('multi-chunk sends keyboard only on first chunk', function () {
+    $sentRequests = [];
+
+    Http::fake(function ($request) use (&$sentRequests) {
+        $sentRequests[] = $request;
+
+        return Http::response(['ok' => true, 'result' => ['message_id' => 1]]);
+    });
+
+    $channel = app(TelegramChannel::class);
+
+    $notifiable = new class
+    {
+        public function routeNotificationFor(string $driver): string
+        {
+            return '-100123';
+        }
+    };
+
+    $longText = str_repeat('A', 5000);
+
+    $notification = new class($longText) extends Notification
+    {
+        public function __construct(private string $text) {}
+
+        public function toTelegram(mixed $notifiable): TelegramMessage
+        {
+            return TelegramMessage::create($this->text)
+                ->button('Click', 'https://example.com');
+        }
+    };
+
+    $channel->send($notifiable, $notification);
+
+    expect($sentRequests)->toHaveCount(2);
+    expect($sentRequests[0]->data())->toHaveKey('reply_markup');
+    expect($sentRequests[1]->data())->not->toHaveKey('reply_markup');
+});
+
+it('single chunk message does not trigger split path', function () {
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]]),
+    ]);
+
+    $channel = app(TelegramChannel::class);
+
+    $notifiable = new class
+    {
+        public function routeNotificationFor(string $driver): string
+        {
+            return '-100123';
+        }
+    };
+
+    $notification = new class extends Notification
+    {
+        public function toTelegram(mixed $notifiable): TelegramMessage
+        {
+            return TelegramMessage::create('Short message');
+        }
+    };
+
+    $result = $channel->send($notifiable, $notification);
+
+    expect($result['ok'])->toBeTrue();
+    Http::assertSentCount(1);
+});
+
+it('throws TelegramApiException on single message API error', function () {
+    Http::fake([
+        'api.telegram.org/*' => Http::response([
+            'ok' => false,
+            'description' => 'Forbidden: bot was blocked by the user',
+        ], 403),
+    ]);
+
+    $channel = app(TelegramChannel::class);
+
+    $notifiable = new class
+    {
+        public function routeNotificationFor(string $driver): string
+        {
+            return '-100123';
+        }
+    };
+
+    $notification = new class extends Notification
+    {
+        public function toTelegram(mixed $notifiable): TelegramMessage
+        {
+            return TelegramMessage::create('Test');
+        }
+    };
+
+    $channel->send($notifiable, $notification);
+})->throws(TelegramApiException::class, 'Forbidden: bot was blocked by the user');

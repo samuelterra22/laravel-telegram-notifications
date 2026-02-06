@@ -48,3 +48,74 @@ it('accepts custom level from config', function () {
     expect($logger)->toBeInstanceOf(Logger::class)
         ->and($logger->getHandlers())->toHaveCount(1);
 });
+
+it('chat_id from $config parameter overrides logging config', function () {
+    config()->set('telegram-notifications.logging.chat_id', '-100LOGGING');
+
+    $factory = new CreateTelegramLogger;
+
+    $logger = $factory(['level' => 'error', 'chat_id' => '-100CONFIG']);
+
+    expect($logger)->toBeInstanceOf(Logger::class);
+
+    // The handler should use the $config chat_id, not the logging config one
+    // We verify by sending a log and checking the request
+    \Illuminate\Support\Facades\Http::fake([
+        'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
+    ]);
+
+    $logger->error('Test');
+
+    \Illuminate\Support\Facades\Http::assertSent(fn ($request) => $request['chat_id'] === '-100CONFIG');
+});
+
+it('topic_id from $config parameter overrides logging config', function () {
+    config()->set('telegram-notifications.logging.topic_id', '99');
+
+    $factory = new CreateTelegramLogger;
+
+    $logger = $factory(['level' => 'error', 'topic_id' => '77']);
+
+    \Illuminate\Support\Facades\Http::fake([
+        'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
+    ]);
+
+    $logger->error('Test');
+
+    \Illuminate\Support\Facades\Http::assertSent(fn ($request) => $request['message_thread_id'] === '77');
+});
+
+it('null topic_id results in null topicId on handler', function () {
+    config()->set('telegram-notifications.logging.topic_id', null);
+
+    $factory = new CreateTelegramLogger;
+
+    $logger = $factory(['level' => 'error']);
+
+    \Illuminate\Support\Facades\Http::fake([
+        'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
+    ]);
+
+    $logger->error('Test');
+
+    \Illuminate\Support\Facades\Http::assertSent(function ($request) {
+        // message_thread_id should not be present when topicId is null
+        return ! array_key_exists('message_thread_id', $request->data());
+    });
+});
+
+it('non-null topic_id is cast to string', function () {
+    config()->set('telegram-notifications.logging.topic_id', 42);
+
+    $factory = new CreateTelegramLogger;
+
+    $logger = $factory(['level' => 'error']);
+
+    \Illuminate\Support\Facades\Http::fake([
+        'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
+    ]);
+
+    $logger->error('Test');
+
+    \Illuminate\Support\Facades\Http::assertSent(fn ($request) => $request['message_thread_id'] === '42');
+});
