@@ -1,0 +1,78 @@
+{
+    "name": "samuelterra22/laravel-telegram-notifications",
+    "description": "Laravel package for sending notifications, messages and logs via Telegram Bot API",
+    "keywords": [
+        "laravel",
+        "telegram",
+        "notifications",
+        "bot",
+        "logging",
+        "monolog"
+    ],
+    "homepage": "https://github.com/samuelterra22/laravel-telegram-notifications",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Samuel Terra",
+            "email": "samuelterra22@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/contracts": "^10.0||^11.0||^12.0",
+        "illuminate/http": "^10.0||^11.0||^12.0",
+        "illuminate/notifications": "^10.0||^11.0||^12.0",
+        "illuminate/support": "^10.0||^11.0||^12.0",
+        "monolog/monolog": "^3.0",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.14",
+        "larastan/larastan": "^2.0||^3.0",
+        "nunomaduro/collision": "^7.0||^8.0",
+        "orchestra/testbench": "^8.0||^9.0||^10.0",
+        "pestphp/pest": "^2.34||^3.0",
+        "pestphp/pest-plugin-arch": "^2.0||^3.0",
+        "pestphp/pest-plugin-laravel": "^2.0||^3.0",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan-deprecation-rules": "^1.0||^2.0",
+        "phpstan/phpstan-phpunit": "^1.0||^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SamuelTerra22\\TelegramNotifications\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SamuelTerra22\\TelegramNotifications\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": "@php ./vendor/bin/testbench package:discover --ansi",
+        "analyse": "vendor/bin/phpstan analyse",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage --min=95",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SamuelTerra22\\TelegramNotifications\\TelegramServiceProvider"
+            ],
+            "aliases": {
+                "Telegram": "SamuelTerra22\\TelegramNotifications\\Facades\\Telegram"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

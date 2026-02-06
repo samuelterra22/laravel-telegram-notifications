@@ -1,0 +1,6 @@
+parameters:
+    ignoreErrors:
+        -
+            identifier: larastan.noEnvCallsOutsideOfConfig
+            path: config/telegram-notifications.php
+            count: 10
