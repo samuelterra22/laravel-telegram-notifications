@@ -4,4 +4,3 @@ All notable changes to `laravel-telegram-notifications` will be documented in th
 
 ## Unreleased
 
-- Initial release
