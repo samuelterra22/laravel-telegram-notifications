@@ -24,8 +24,8 @@ A complete Laravel package for integrating the Telegram Bot API with Laravel app
 
 ## Requirements
 
-- PHP 8.1+
-- Laravel 10, 11 or 12
+- PHP 8.2+
+- Laravel 11 or 12
 
 ## Installation
 
