@@ -257,3 +257,44 @@ it('gets bot commands', function () {
 
     Http::assertSent(fn ($request) => str_contains($request->url(), '/getMyCommands'));
 });
+
+// --- Unhappy path / edge case tests ---
+
+it('throws InvalidArgumentException for empty string bot name', function () {
+    $this->telegram->bot('');
+})->throws(InvalidArgumentException::class, 'Bot [] not configured.');
+
+it('sends deleteMessages with empty array', function () {
+    $this->telegram->deleteMessages('-100123', []);
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), '/deleteMessages')
+        && $request['message_ids'] === []
+    );
+});
+
+it('filters out null parseMode in sendMessage', function () {
+    $this->telegram->sendMessage('-100123', 'Hello', parseMode: null);
+
+    Http::assertSent(function ($request) {
+        // array_filter removes null values, so parse_mode should not be present
+        return str_contains($request->url(), '/sendMessage')
+            && $request['text'] === 'Hello'
+            && ! isset($request['parse_mode']);
+    });
+});
+
+it('sends editMessageText with empty text to API', function () {
+    $this->telegram->editMessageText('-100123', 456, '');
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), '/editMessageText')
+        && $request['message_id'] === 456
+    );
+});
+
+it('sends setMyCommands with empty commands array', function () {
+    $this->telegram->setMyCommands([]);
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), '/setMyCommands')
+        && $request['commands'] === []
+    );
+});
