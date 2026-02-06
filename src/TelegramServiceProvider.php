@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace SamuelTerra22\TelegramNotifications;
 
+use Illuminate\Routing\Router;
 use SamuelTerra22\TelegramNotifications\Channels\TelegramChannel;
 use SamuelTerra22\TelegramNotifications\Commands\TelegramGetMeCommand;
 use SamuelTerra22\TelegramNotifications\Commands\TelegramSetWebhookCommand;
+use SamuelTerra22\TelegramNotifications\Http\Middleware\VerifyTelegramWebhook;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -39,5 +41,12 @@ class TelegramServiceProvider extends PackageServiceProvider
         $this->app->singleton(TelegramChannel::class, function ($app) {
             return new TelegramChannel($app->make(Telegram::class));
         });
+    }
+
+    public function packageBooted(): void
+    {
+        /** @var Router $router */
+        $router = $this->app->make(Router::class);
+        $router->aliasMiddleware('telegram.webhook', VerifyTelegramWebhook::class);
     }
 }

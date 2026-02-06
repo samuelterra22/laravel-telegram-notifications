@@ -21,7 +21,15 @@ A complete Laravel package for integrating the Telegram Bot API with Laravel app
 - **Rate limiting**: built-in retry-after handling for HTTP 429 responses
 - **Fully testable**: all HTTP calls via Laravel's `Http::` facade, easily mocked with `Http::fake()`
 - **Zero external dependencies**: uses Laravel's built-in HTTP client (no Guzzle direct dependency)
-- **99.8% test coverage**: 300 tests with 699 assertions
+- **Extended button types**: login URL, switch inline query, copy text, pay, and more
+- **`ReplyKeyboardRemove` and `ForceReply`**: complete reply markup coverage
+- **Fluent message builder**: `Telegram::message($chatId)->html('text')->silent()->send()`
+- **Broadcast support**: send messages to multiple chats with rate limiting and failure handling
+- **Typed response objects**: `TelegramResponse` with `messageId()`, `date()`, `chat()` accessors
+- **Webhook verification middleware**: validate incoming webhook requests via secret token
+- **Chat action shortcuts**: `typing()`, `uploadingPhoto()`, `recordingVideo()`, etc.
+- **`$options` parameter on all methods**: pass any Telegram Bot API parameter without falling back to raw `call()`
+- **99.9% test coverage**: 616 tests with 1194 assertions
 
 ## Requirements
 
@@ -341,6 +349,195 @@ $keyboard = ReplyKeyboard::make()
     ->placeholder('Choose...');
 ```
 
+#### Extended Button Types
+
+```php
+use SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard;
+use SamuelTerra22\TelegramNotifications\Keyboards\Button;
+
+$keyboard = InlineKeyboard::make()
+    ->loginUrl('Login', 'https://example.com/auth')
+    ->switchInlineQuery('Search Everywhere', 'query')
+    ->switchInlineQueryCurrentChat('Search Here', 'query')
+    ->switchInlineQueryChosenChat('Pick Chat', ['allow_user_chats' => true])
+    ->row()
+    ->copyText('Copy Code', 'ABC123')
+    ->pay('Pay $10');
+```
+
+#### Remove Keyboard & Force Reply
+
+```php
+use SamuelTerra22\TelegramNotifications\Keyboards\ReplyKeyboardRemove;
+use SamuelTerra22\TelegramNotifications\Keyboards\ForceReply;
+
+// Remove the reply keyboard
+$remove = ReplyKeyboardRemove::make()->selective();
+
+// Force a reply from the user
+$forceReply = ForceReply::make()
+    ->placeholder('Type your answer...')
+    ->selective();
+```
+
+### Fluent Message Builder
+
+Build and send messages with a chainable interface that returns typed `TelegramResponse` objects:
+
+```php
+use SamuelTerra22\TelegramNotifications\Facades\Telegram;
+
+$response = Telegram::message('-1001234567890')
+    ->html('<b>Important Update</b>')
+    ->silent()
+    ->protected()
+    ->disablePreview()
+    ->keyboard($inlineKeyboard)
+    ->replyTo($previousMessageId)
+    ->topic('42')
+    ->send();
+
+$response->ok();         // true
+$response->messageId();  // 42
+$response->date();       // Carbon instance
+$response->text();       // 'Important Update'
+```
+
+#### Conditional Sending
+
+```php
+Telegram::message($chatId)
+    ->text('Only sent if condition is true')
+    ->sendWhen($user->wantsNotifications())
+    ->send();
+```
+
+### Broadcast Messages
+
+Send the same message to multiple chats with rate limiting and error handling:
+
+```php
+use SamuelTerra22\TelegramNotifications\Facades\Telegram;
+
+$responses = Telegram::broadcast(['-100001', '-100002', '-100003'])
+    ->html('<b>Announcement</b>')
+    ->silent()
+    ->keyboard($keyboard)
+    ->rateLimit(50) // 50ms between each send
+    ->onFailure(function (string $chatId, Throwable $e) {
+        Log::warning("Failed to send to {$chatId}: {$e->getMessage()}");
+    })
+    ->send();
+```
+
+### Media Methods via Facade
+
+Send media directly without building message objects:
+
+```php
+use SamuelTerra22\TelegramNotifications\Facades\Telegram;
+
+// Photo
+Telegram::sendPhoto($chatId, 'https://example.com/photo.jpg', 'Caption');
+
+// Document
+Telegram::sendDocument($chatId, 'https://example.com/file.pdf', 'Report');
+
+// Video, Audio, Voice, Animation
+Telegram::sendVideo($chatId, 'https://example.com/video.mp4', 'Video caption');
+Telegram::sendAudio($chatId, 'https://example.com/song.mp3', 'Now playing');
+Telegram::sendVoice($chatId, 'https://example.com/voice.ogg');
+Telegram::sendAnimation($chatId, 'https://example.com/animation.gif');
+
+// Sticker, Video Note
+Telegram::sendSticker($chatId, 'sticker_file_id');
+Telegram::sendVideoNote($chatId, 'video_note_id');
+
+// Location, Venue, Contact
+Telegram::sendLocation($chatId, 40.7128, -74.0060);
+Telegram::sendVenue($chatId, 40.7128, -74.0060, 'Central Park', '59th St');
+Telegram::sendContact($chatId, '+1234567890', 'John', 'Doe');
+
+// Poll, Dice
+Telegram::sendPoll($chatId, 'Favorite color?', ['Red', 'Blue', 'Green']);
+Telegram::sendDice($chatId, '🎯');
+
+// Media Group
+Telegram::sendMediaGroup($chatId, [
+    ['type' => 'photo', 'media' => 'https://example.com/1.jpg'],
+    ['type' => 'photo', 'media' => 'https://example.com/2.jpg'],
+]);
+```
+
+### Advanced Options
+
+All Facade methods accept an optional `$options` array as the last parameter to pass any Telegram Bot API parameter:
+
+```php
+use SamuelTerra22\TelegramNotifications\Facades\Telegram;
+use SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard;
+
+// Send with reply_markup, disable_notification, etc.
+Telegram::sendMessage($chatId, 'Hello', options: [
+    'reply_markup' => InlineKeyboard::make()->callback('OK', 'ok'),
+    'disable_notification' => true,
+    'protect_content' => true,
+]);
+
+// reply_markup auto-encodes ReplyMarkupInterface instances and arrays to JSON
+Telegram::sendPhoto($chatId, $photoUrl, 'Caption', options: [
+    'reply_markup' => $keyboard,  // auto-encoded
+    'has_spoiler' => true,
+]);
+```
+
+### Chat Action Shortcuts
+
+```php
+use SamuelTerra22\TelegramNotifications\Facades\Telegram;
+
+Telegram::typing($chatId);
+Telegram::uploadingPhoto($chatId);
+Telegram::uploadingDocument($chatId);
+Telegram::recordingVideo($chatId);
+Telegram::recordingVoice($chatId);
+```
+
+### Callback & Inline Query Answers
+
+```php
+use SamuelTerra22\TelegramNotifications\Facades\Telegram;
+
+Telegram::answerCallbackQuery($callbackQueryId, 'Done!', showAlert: true);
+Telegram::answerInlineQuery($inlineQueryId, $results);
+```
+
+### Moderation
+
+```php
+use SamuelTerra22\TelegramNotifications\Facades\Telegram;
+
+Telegram::banChatMember($chatId, $userId, ['until_date' => now()->addDays(7)->timestamp]);
+Telegram::unbanChatMember($chatId, $userId, ['only_if_banned' => true]);
+```
+
+### Webhook Verification Middleware
+
+Protect your webhook endpoint by verifying the secret token header:
+
+```env
+TELEGRAM_WEBHOOK_SECRET=your-secret-token
+```
+
+Register the middleware on your webhook route:
+
+```php
+Route::post('/telegram/webhook', TelegramWebhookController::class)
+    ->middleware('telegram.webhook');
+```
+
+The middleware checks the `X-Telegram-Bot-Api-Secret-Token` header against your configured secret. If no secret is configured, all requests are allowed through.
+
 ### Edit, Delete and Forward Messages
 
 ```php
@@ -374,10 +571,13 @@ Telegram::copyMessage($toChatId, $fromChatId, $messageId);
 use SamuelTerra22\TelegramNotifications\Enums\ChatAction;
 use SamuelTerra22\TelegramNotifications\Facades\Telegram;
 
+// Using the enum
 Telegram::sendChatAction($chatId, ChatAction::Typing);
 Telegram::sendChatAction($chatId, ChatAction::UploadDocument);
-Telegram::sendChatAction($chatId, ChatAction::UploadPhoto);
-Telegram::sendChatAction($chatId, ChatAction::RecordVideo);
+
+// Using shortcuts (see Chat Action Shortcuts section above)
+Telegram::typing($chatId);
+Telegram::uploadingPhoto($chatId);
 ```
 
 ### Chat Management

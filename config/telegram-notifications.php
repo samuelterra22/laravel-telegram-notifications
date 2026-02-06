@@ -76,4 +76,16 @@ return [
         'topic_id' => env('TELEGRAM_LOG_TOPIC_ID'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Webhook Secret
+    |--------------------------------------------------------------------------
+    |
+    | Secret token for verifying incoming webhook requests. Set this to the
+    | same value you pass as secret_token when calling setWebhook.
+    |
+    */
+
+    'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
+
 ];

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace SamuelTerra22\TelegramNotifications\Keyboards;
 
-class ReplyKeyboard
+use SamuelTerra22\TelegramNotifications\Contracts\ReplyMarkupInterface;
+
+class ReplyKeyboard implements ReplyMarkupInterface
 {
     /** @var array<int, array<int, array<string, mixed>>> */
     private array $rows = [];
