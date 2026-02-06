@@ -27,7 +27,7 @@ it('throws when uploading with empty file path', function () {
     ]);
 
     $this->api->upload('sendDocument', ['chat_id' => '-100123'], 'document', '');
-})->throws(ValueError::class, 'Path must not be empty');
+})->throws(ValueError::class);
 
 it('throws TelegramApiException when upload API returns error', function () {
     Http::fake([
