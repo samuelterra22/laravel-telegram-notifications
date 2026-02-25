@@ -307,6 +307,279 @@ it('truncates overall message exceeding 4096 characters', function () {
         ->and($request['text'])->toContain('...');
 });
 
+it('includes authenticated user name and ID in log', function () {
+    $user = new class implements \Illuminate\Contracts\Auth\Authenticatable
+    {
+        public string $name = 'John Doe';
+
+        public string $email = 'john@example.com';
+
+        public function getAuthIdentifierName(): string
+        {
+            return 'id';
+        }
+
+        public function getAuthIdentifier(): mixed
+        {
+            return 42;
+        }
+
+        public function getAuthPassword(): string
+        {
+            return '';
+        }
+
+        public function getAuthPasswordName(): string
+        {
+            return 'password';
+        }
+
+        public function getRememberToken(): string
+        {
+            return '';
+        }
+
+        public function getRememberTokenName(): string
+        {
+            return '';
+        }
+
+        public function setRememberToken($value): void {}
+    };
+
+    auth()->guard()->setUser($user);
+
+    $handler = new TelegramHandler(
+        api: $this->api,
+        chatId: '-100123',
+        level: Level::Error,
+    );
+
+    $record = new LogRecord(
+        datetime: new \DateTimeImmutable,
+        channel: 'test',
+        level: Level::Error,
+        message: 'Test with user',
+        context: [],
+    );
+
+    $handler->handle($record);
+
+    Http::assertSent(function ($request) {
+        return str_contains($request['text'], '<b>User:</b> John Doe (#42)')
+            && str_contains($request['text'], 'Test with user');
+    });
+});
+
+it('omits user line when no user is authenticated', function () {
+    $handler = new TelegramHandler(
+        api: $this->api,
+        chatId: '-100123',
+        level: Level::Error,
+    );
+
+    $record = new LogRecord(
+        datetime: new \DateTimeImmutable,
+        channel: 'test',
+        level: Level::Error,
+        message: 'Test without user',
+        context: [],
+    );
+
+    $handler->handle($record);
+
+    Http::assertSent(function ($request) {
+        return ! str_contains($request['text'], 'User:')
+            && str_contains($request['text'], 'Test without user');
+    });
+});
+
+it('uses email when user has no name', function () {
+    $user = new class implements \Illuminate\Contracts\Auth\Authenticatable
+    {
+        public ?string $name = null;
+
+        public string $email = 'jane@example.com';
+
+        public function getAuthIdentifierName(): string
+        {
+            return 'id';
+        }
+
+        public function getAuthIdentifier(): mixed
+        {
+            return 7;
+        }
+
+        public function getAuthPassword(): string
+        {
+            return '';
+        }
+
+        public function getAuthPasswordName(): string
+        {
+            return 'password';
+        }
+
+        public function getRememberToken(): string
+        {
+            return '';
+        }
+
+        public function getRememberTokenName(): string
+        {
+            return '';
+        }
+
+        public function setRememberToken($value): void {}
+    };
+
+    auth()->guard()->setUser($user);
+
+    $handler = new TelegramHandler(
+        api: $this->api,
+        chatId: '-100123',
+        level: Level::Error,
+    );
+
+    $record = new LogRecord(
+        datetime: new \DateTimeImmutable,
+        channel: 'test',
+        level: Level::Error,
+        message: 'Test',
+        context: [],
+    );
+
+    $handler->handle($record);
+
+    Http::assertSent(fn ($request) => str_contains($request['text'], '<b>User:</b> jane@example.com (#7)'));
+});
+
+it('shows only ID when user has no name or email', function () {
+    $user = new class implements \Illuminate\Contracts\Auth\Authenticatable
+    {
+        public ?string $name = null;
+
+        public ?string $email = null;
+
+        public function getAuthIdentifierName(): string
+        {
+            return 'id';
+        }
+
+        public function getAuthIdentifier(): mixed
+        {
+            return 99;
+        }
+
+        public function getAuthPassword(): string
+        {
+            return '';
+        }
+
+        public function getAuthPasswordName(): string
+        {
+            return 'password';
+        }
+
+        public function getRememberToken(): string
+        {
+            return '';
+        }
+
+        public function getRememberTokenName(): string
+        {
+            return '';
+        }
+
+        public function setRememberToken($value): void {}
+    };
+
+    auth()->guard()->setUser($user);
+
+    $handler = new TelegramHandler(
+        api: $this->api,
+        chatId: '-100123',
+        level: Level::Error,
+    );
+
+    $record = new LogRecord(
+        datetime: new \DateTimeImmutable,
+        channel: 'test',
+        level: Level::Error,
+        message: 'Test',
+        context: [],
+    );
+
+    $handler->handle($record);
+
+    Http::assertSent(fn ($request) => str_contains($request['text'], '<b>User:</b> #99'));
+});
+
+it('escapes HTML in user name', function () {
+    $user = new class implements \Illuminate\Contracts\Auth\Authenticatable
+    {
+        public string $name = '<b>Hacker</b>';
+
+        public string $email = 'hack@test.com';
+
+        public function getAuthIdentifierName(): string
+        {
+            return 'id';
+        }
+
+        public function getAuthIdentifier(): mixed
+        {
+            return 1;
+        }
+
+        public function getAuthPassword(): string
+        {
+            return '';
+        }
+
+        public function getAuthPasswordName(): string
+        {
+            return 'password';
+        }
+
+        public function getRememberToken(): string
+        {
+            return '';
+        }
+
+        public function getRememberTokenName(): string
+        {
+            return '';
+        }
+
+        public function setRememberToken($value): void {}
+    };
+
+    auth()->guard()->setUser($user);
+
+    $handler = new TelegramHandler(
+        api: $this->api,
+        chatId: '-100123',
+        level: Level::Error,
+    );
+
+    $record = new LogRecord(
+        datetime: new \DateTimeImmutable,
+        channel: 'test',
+        level: Level::Error,
+        message: 'Test',
+        context: [],
+    );
+
+    $handler->handle($record);
+
+    Http::assertSent(function ($request) {
+        return str_contains($request['text'], '&lt;b&gt;Hacker&lt;/b&gt;')
+            && ! str_contains($request['text'], '<b>Hacker</b>');
+    });
+});
+
 it('never throws on send failure', function () {
     Http::fake([
         'api.telegram.org/*' => Http::response(['ok' => false], 500),
