@@ -304,7 +304,7 @@ it('truncates overall message exceeding 4096 characters', function () {
     $request = $recorded[0][0];
 
     expect(mb_strlen($request['text']))->toBeLessThanOrEqual(4096)
-        ->and($request['text'])->toEndWith('...</b>');
+        ->and($request['text'])->toContain('...');
 });
 
 it('never throws on send failure', function () {

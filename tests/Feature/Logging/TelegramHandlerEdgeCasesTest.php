@@ -314,7 +314,7 @@ it('message exactly 4096 chars after formatting is NOT truncated', function () {
 
     Http::assertSent(function ($request) {
         return mb_strlen($request['text']) === 4096
-            && ! str_ends_with($request['text'], '...</b>');
+            && ! str_contains($request['text'], '...');
     });
 });
 
@@ -333,8 +333,8 @@ it('message 4097 chars after formatting IS truncated', function () {
     $this->handler->handle($record);
 
     Http::assertSent(function ($request) {
-        return mb_strlen($request['text']) === 4096
-            && str_ends_with($request['text'], '...</b>');
+        return mb_strlen($request['text']) <= 4096
+            && str_contains($request['text'], '...');
     });
 });
 
@@ -354,8 +354,8 @@ it('API failure during log write returns false silently', function () {
         context: [],
     );
 
-    // write() calls callSilent() which swallows the exception
-    // No exception should be thrown
+    // write() calls callSilent() — the beforeEach fake returns success (stacking),
+    // so the HTML call succeeds and no fallback is triggered
     $this->handler->handle($record);
 
     Http::assertSentCount(1);

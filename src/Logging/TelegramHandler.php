@@ -37,12 +37,20 @@ class TelegramHandler extends AbstractProcessingHandler
     {
         $message = $this->formatMessage($record);
 
-        $this->api->callSilent('sendMessage', array_filter([
+        $sent = $this->api->callSilent('sendMessage', array_filter([
             'chat_id' => $this->chatId,
             'text' => $message,
             'parse_mode' => 'HTML',
             'message_thread_id' => $this->topicId,
         ]));
+
+        if (! $sent) {
+            $this->api->callSilent('sendMessage', array_filter([
+                'chat_id' => $this->chatId,
+                'text' => strip_tags($message),
+                'message_thread_id' => $this->topicId,
+            ]));
+        }
     }
 
     private function formatMessage(LogRecord $record): string
@@ -80,7 +88,21 @@ class TelegramHandler extends AbstractProcessingHandler
         $text = implode("\n", $lines);
 
         if (mb_strlen($text) > 4096) {
-            $text = mb_substr($text, 0, 4089).'...</b>';
+            $text = mb_substr($text, 0, 4080);
+
+            // Close any unclosed <pre> or <b> tags to keep HTML valid
+            $openPre = substr_count($text, '<pre>') - substr_count($text, '</pre>');
+            $openBold = substr_count($text, '<b>') - substr_count($text, '</b>');
+
+            $suffix = '...';
+            if ($openPre > 0) {
+                $suffix .= '</pre>';
+            }
+            if ($openBold > 0) {
+                $suffix .= '</b>';
+            }
+
+            $text .= $suffix;
         }
 
         return $text;

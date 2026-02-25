@@ -11,6 +11,7 @@ it('creates a Logger instance', function () {
 
     $logger = $factory([
         'level' => 'error',
+        'enabled' => true,
     ]);
 
     expect($logger)->toBeInstanceOf(Logger::class)
@@ -22,6 +23,7 @@ it('sets handler level from config', function () {
 
     $logger = $factory([
         'level' => 'warning',
+        'enabled' => true,
     ]);
 
     $handlers = $logger->getHandlers();
@@ -36,6 +38,7 @@ it('uses chat_id from config', function () {
     $logger = $factory([
         'level' => 'error',
         'chat_id' => '-100custom',
+        'enabled' => true,
     ]);
 
     expect($logger)->toBeInstanceOf(Logger::class);
@@ -49,6 +52,7 @@ it('uses logging config defaults', function () {
 
     $logger = $factory([
         'level' => 'error',
+        'enabled' => true,
     ]);
 
     expect($logger)->toBeInstanceOf(Logger::class);

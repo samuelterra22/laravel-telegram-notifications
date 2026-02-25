@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SamuelTerra22\TelegramNotifications\Logging;
 
+use Monolog\Handler\NullHandler;
 use Monolog\Level;
 use Monolog\Logger;
 use SamuelTerra22\TelegramNotifications\Telegram;
@@ -17,10 +18,16 @@ class CreateTelegramLogger
      */
     public function __invoke(array $config): Logger
     {
+        $loggingConfig = config('telegram-notifications.logging');
+
+        $enabled = $config['enabled'] ?? $loggingConfig['enabled'] ?? false;
+
+        if (! $enabled) {
+            return new Logger('telegram', [new NullHandler]);
+        }
+
         /** @var Telegram $telegram */
         $telegram = app(Telegram::class);
-
-        $loggingConfig = config('telegram-notifications.logging');
 
         $botName = $loggingConfig['bot'] ?? 'default';
         $chatId = $config['chat_id'] ?? $loggingConfig['chat_id'] ?? '';

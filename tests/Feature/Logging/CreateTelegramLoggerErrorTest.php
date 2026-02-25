@@ -8,7 +8,7 @@ use SamuelTerra22\TelegramNotifications\Logging\CreateTelegramLogger;
 it('throws for invalid level name', function () {
     $factory = new CreateTelegramLogger;
 
-    $factory(['level' => 'invalid']);
+    $factory(['level' => 'invalid', 'enabled' => true]);
 })->throws(\UnhandledMatchError::class);
 
 it('throws InvalidArgumentException for invalid bot name in logging config', function () {
@@ -16,7 +16,7 @@ it('throws InvalidArgumentException for invalid bot name in logging config', fun
 
     $factory = new CreateTelegramLogger;
 
-    $factory(['level' => 'error']);
+    $factory(['level' => 'error', 'enabled' => true]);
 })->throws(InvalidArgumentException::class, 'Bot [nonexistent_bot] not configured.');
 
 it('handles empty chat_id gracefully', function () {
@@ -24,7 +24,7 @@ it('handles empty chat_id gracefully', function () {
 
     $factory = new CreateTelegramLogger;
 
-    $logger = $factory(['level' => 'error']);
+    $logger = $factory(['level' => 'error', 'enabled' => true]);
 
     expect($logger)->toBeInstanceOf(Logger::class);
 });
@@ -35,7 +35,7 @@ it('uses defaults when logging config section is null', function () {
     $factory = new CreateTelegramLogger;
 
     // Bot name defaults to 'default', which is configured in TestCase
-    $logger = $factory(['level' => 'error']);
+    $logger = $factory(['level' => 'error', 'enabled' => true]);
 
     expect($logger)->toBeInstanceOf(Logger::class);
 });
@@ -43,7 +43,7 @@ it('uses defaults when logging config section is null', function () {
 it('accepts custom level from config', function () {
     $factory = new CreateTelegramLogger;
 
-    $logger = $factory(['level' => 'debug']);
+    $logger = $factory(['level' => 'debug', 'enabled' => true]);
 
     expect($logger)->toBeInstanceOf(Logger::class)
         ->and($logger->getHandlers())->toHaveCount(1);
@@ -54,7 +54,7 @@ it('chat_id from $config parameter overrides logging config', function () {
 
     $factory = new CreateTelegramLogger;
 
-    $logger = $factory(['level' => 'error', 'chat_id' => '-100CONFIG']);
+    $logger = $factory(['level' => 'error', 'chat_id' => '-100CONFIG', 'enabled' => true]);
 
     expect($logger)->toBeInstanceOf(Logger::class);
 
@@ -74,7 +74,7 @@ it('topic_id from $config parameter overrides logging config', function () {
 
     $factory = new CreateTelegramLogger;
 
-    $logger = $factory(['level' => 'error', 'topic_id' => '77']);
+    $logger = $factory(['level' => 'error', 'topic_id' => '77', 'enabled' => true]);
 
     \Illuminate\Support\Facades\Http::fake([
         'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
@@ -90,7 +90,7 @@ it('null topic_id results in null topicId on handler', function () {
 
     $factory = new CreateTelegramLogger;
 
-    $logger = $factory(['level' => 'error']);
+    $logger = $factory(['level' => 'error', 'enabled' => true]);
 
     \Illuminate\Support\Facades\Http::fake([
         'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
@@ -109,7 +109,7 @@ it('non-null topic_id is cast to string', function () {
 
     $factory = new CreateTelegramLogger;
 
-    $logger = $factory(['level' => 'error']);
+    $logger = $factory(['level' => 'error', 'enabled' => true]);
 
     \Illuminate\Support\Facades\Http::fake([
         'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
