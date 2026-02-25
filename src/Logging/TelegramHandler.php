@@ -64,6 +64,12 @@ class TelegramHandler extends AbstractProcessingHandler
         $lines[] = '';
         $lines[] = "<b>App:</b> {$this->escapeHtml($appName)}";
         $lines[] = "<b>Env:</b> {$this->escapeHtml($environment)}";
+
+        $userName = $this->resolveUserName();
+        if ($userName !== null) {
+            $lines[] = "<b>User:</b> {$this->escapeHtml($userName)}";
+        }
+
         $lines[] = '';
         $lines[] = '<b>Message:</b>';
         $lines[] = $this->escapeHtml($record->message);
@@ -106,6 +112,28 @@ class TelegramHandler extends AbstractProcessingHandler
         }
 
         return $text;
+    }
+
+    private function resolveUserName(): ?string
+    {
+        try {
+            $user = auth()->user();
+
+            if ($user === null) {
+                return null;
+            }
+
+            $id = $user->getAuthIdentifier();
+            $name = $user->name ?? $user->email ?? null;
+
+            if ($name !== null) {
+                return "{$name} (#{$id})";
+            }
+
+            return "#{$id}";
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function escapeHtml(string $text): string
