@@ -11,7 +11,7 @@ Laravel package (`samuelterra22/laravel-telegram-notifications`) for integrating
 - **Facade**: `Telegram`
 - **Compatibility**: PHP 8.2+, Laravel 11/12
 - **Package tooling**: `spatie/laravel-package-tools`
-- **Tests**: 300 tests, 699 assertions, 99.8% coverage
+- **Tests**: 785 tests, 1439 assertions, 95%+ coverage
 
 The full specification is in `Plano_de_Desenvolvimento_do_Pacote_Telegram.md` (Portuguese). Refer to it for detailed implementation guidance, code examples, and API coverage plans.
 
@@ -53,14 +53,17 @@ Telegram::sendMessage()     ──> Telegram service ─┘
 
 **Key components**:
 
-- `Api/TelegramBotApi` — Low-level HTTP client using Laravel's `Http::` facade. Methods: `call()` (throws on error), `callSilent()` (never throws, for logging), `upload()` (multipart). All HTTP is through `Http::` so tests use `Http::fake()`.
-- `Telegram` — Main service. Manages multiple bot instances (lazy-loaded from config). Provides high-level convenience methods (`sendMessage`, `editMessageText`, `deleteMessage`, etc.).
-- `Messages/*` — Fluent builder classes (TelegramMessage, TelegramPhoto, TelegramDocument, etc.) implementing `TelegramMessageInterface`. All use the `HasSharedParams` trait for `chatId`, `topicId`, and `bot`.
+- `Api/TelegramBotApi` — Low-level HTTP client using Laravel's `Http::` facade. Methods: `call()` (throws on error with configurable exponential backoff retry on 429), `callSilent()` (never throws, for logging), `upload()` (multipart). All HTTP is through `Http::` so tests use `Http::fake()`.
+- `Telegram` — Main service. Manages multiple bot instances (lazy-loaded from config). Provides 50+ high-level convenience methods: messaging, media, payments, gifts, stories, checklists, reactions, moderation, and more.
+- `Messages/*` — Fluent builder classes (TelegramMessage, TelegramPhoto, TelegramDocument, TelegramMediaGroup, TelegramChecklist, etc.) implementing `TelegramMessageInterface`. All use the `HasSharedParams` trait for `chatId`, `topicId`, `bot`, and `effect`.
+- `Helpers/MarkdownV2` — Static utility for escaping MarkdownV2 special characters.
 - `Keyboards/InlineKeyboard`, `ReplyKeyboard`, `Button` — Fluent builders for interactive keyboards.
 - `Channels/TelegramChannel` — Laravel Notification channel. Calls `$notification->toTelegram($notifiable)` and resolves `chat_id` from message or `routeNotificationForTelegram()`.
 - `Logging/TelegramHandler` — Monolog `AbstractProcessingHandler`. Formats logs with emoji/level/app/environment. Uses `callSilent()` (never crashes the app).
 - `Logging/CreateTelegramLogger` — Factory for Laravel's `config/logging.php` custom driver.
-- `TelegramServiceProvider` — Uses `spatie/laravel-package-tools`. Registers singletons, publishes config, registers Artisan commands.
+- `Http/WebhookHandler` — Abstract base class for routing incoming Telegram webhook updates to typed handler methods (commands, messages, callbacks, payments, reactions).
+- `Jobs/SendTelegramBroadcast` — Queueable job for broadcasting messages to multiple chats with rate limiting.
+- `TelegramServiceProvider` — Uses `spatie/laravel-package-tools`. Registers singletons, publishes config, registers Artisan commands (`telegram:get-me`, `telegram:set-webhook`, `telegram:send`).
 
 ## Design Principles
 
@@ -75,8 +78,8 @@ Telegram::sendMessage()     ──> Telegram service ─┘
 - **Framework**: Pest 3 with Orchestra Testbench
 - **Base class**: `tests/TestCase.php` extends `Orchestra\Testbench\TestCase`, loads the service provider and sets test config
 - **Architecture tests**: `tests/ArchTest.php` — no debug functions, strict types, contracts are interfaces, enums are enums
-- **Unit tests** (~180): API client, message builders (all 14 types), keyboards, enums, exceptions, Telegram service
-- **Feature tests** (~120): Service provider, notification channel, Monolog handler, Artisan commands, integration flows (SendAllTypes, ErrorResilience)
+- **Unit tests** (~350): API client (with retry backoff), message builders (15 types incl. MediaGroup, Checklist), keyboards, enums, exceptions, Telegram service (messaging, payments, gifts, stories, reactions, moderation), helpers (MarkdownV2), jobs, fluent builders
+- **Feature tests** (~170): Service provider, notification channel, Monolog handler, Artisan commands (get-me, set-webhook, send), webhook handler, integration flows (SendAllTypes, ErrorResilience)
 
 ## CI/CD
 

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\View;
-use SamuelTerra22\TelegramNotifications\Enums\ParseMode;
 use SamuelTerra22\TelegramNotifications\Messages\TelegramMessage;
 
 it('renders a blade view as content', function () {
