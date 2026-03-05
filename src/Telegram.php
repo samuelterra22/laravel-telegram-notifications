@@ -772,6 +772,120 @@ class Telegram
     }
 
     // -----------------------------------------------------------------------
+    // Reactions
+    // -----------------------------------------------------------------------
+
+    /**
+     * Set a reaction on a message.
+     *
+     * @param  array<int, array{type: string, emoji?: string, custom_emoji_id?: string}>  $reaction
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function setMessageReaction(
+        string $chatId,
+        int|string $messageId,
+        array $reaction,
+        bool $isBig = false,
+        array $options = [],
+    ): array {
+        return $this->bot()->call('setMessageReaction', array_merge(array_filter([
+            'chat_id' => $chatId,
+            'message_id' => $messageId,
+            'reaction' => $reaction,
+            'is_big' => $isBig ?: null,
+        ]), $options));
+    }
+
+    // -----------------------------------------------------------------------
+    // Suggested Posts
+    // -----------------------------------------------------------------------
+
+    /**
+     * Approve a suggested post.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function approveSuggestedPost(string $chatId, int|string $messageId, array $options = []): array
+    {
+        return $this->bot()->call('approveSuggestedPost', array_merge([
+            'chat_id' => $chatId,
+            'message_id' => $messageId,
+        ], $options));
+    }
+
+    /**
+     * Decline a suggested post.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function declineSuggestedPost(string $chatId, int|string $messageId, array $options = []): array
+    {
+        return $this->bot()->call('declineSuggestedPost', array_merge([
+            'chat_id' => $chatId,
+            'message_id' => $messageId,
+        ], $options));
+    }
+
+    // -----------------------------------------------------------------------
+    // Profile Management
+    // -----------------------------------------------------------------------
+
+    /**
+     * Set the bot's profile photo.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function setMyProfilePhoto(string $photo, bool $isPersonal = false, array $options = []): array
+    {
+        return $this->bot()->call('setMyProfilePhoto', array_merge(array_filter([
+            'photo' => $photo,
+            'is_personal' => $isPersonal ?: null,
+        ]), $options));
+    }
+
+    /**
+     * Remove the bot's profile photo.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function removeMyProfilePhoto(bool $isPersonal = false, array $options = []): array
+    {
+        return $this->bot()->call('removeMyProfilePhoto', array_merge(array_filter([
+            'is_personal' => $isPersonal ?: null,
+        ]), $options));
+    }
+
+    // -----------------------------------------------------------------------
+    // Message Drafts
+    // -----------------------------------------------------------------------
+
+    /**
+     * Send a message draft.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function sendMessageDraft(
+        string $chatId,
+        string $text,
+        ?string $parseMode = 'HTML',
+        ?string $businessConnectionId = null,
+        array $options = [],
+    ): array {
+        return $this->bot()->call('sendMessageDraft', array_merge(array_filter([
+            'chat_id' => $chatId,
+            'text' => $text,
+            'parse_mode' => $parseMode,
+            'business_connection_id' => $businessConnectionId,
+        ]), $options));
+    }
+
+    // -----------------------------------------------------------------------
     // Chat action shortcuts
     // -----------------------------------------------------------------------
 
