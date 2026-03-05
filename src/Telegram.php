@@ -1127,6 +1127,111 @@ class Telegram
     }
 
     // -----------------------------------------------------------------------
+    // Story methods
+    // -----------------------------------------------------------------------
+
+    /**
+     * Post a story.
+     *
+     * @param  array<string, mixed>  $content
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function postStory(
+        string $chatId,
+        array $content,
+        ?int $activePeriod = null,
+        ?string $caption = null,
+        ?string $parseMode = 'HTML',
+        array $options = [],
+    ): array {
+        return $this->bot()->call('postStory', array_merge(array_filter([
+            'chat_id' => $chatId,
+            'content' => $content,
+            'active_period' => $activePeriod,
+            'caption' => $caption,
+            'parse_mode' => $caption !== null ? $parseMode : null,
+        ]), $options));
+    }
+
+    /**
+     * Edit a story.
+     *
+     * @param  array<string, mixed>  $content
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function editStory(
+        string $chatId,
+        int|string $storyId,
+        array $content,
+        ?string $caption = null,
+        ?string $parseMode = 'HTML',
+        array $options = [],
+    ): array {
+        return $this->bot()->call('editStory', array_merge(array_filter([
+            'chat_id' => $chatId,
+            'story_id' => $storyId,
+            'content' => $content,
+            'caption' => $caption,
+            'parse_mode' => $caption !== null ? $parseMode : null,
+        ]), $options));
+    }
+
+    /**
+     * Delete a story.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function deleteStory(string $chatId, int|string $storyId, array $options = []): array
+    {
+        return $this->bot()->call('deleteStory', array_merge([
+            'chat_id' => $chatId,
+            'story_id' => $storyId,
+        ], $options));
+    }
+
+    /**
+     * Delete multiple stories.
+     *
+     * @param  array<int, int|string>  $storyIds
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function deleteStories(string $chatId, array $storyIds, array $options = []): array
+    {
+        return $this->bot()->call('deleteStories', array_merge([
+            'chat_id' => $chatId,
+            'story_ids' => $storyIds,
+        ], $options));
+    }
+
+    // -----------------------------------------------------------------------
+    // Checklist methods
+    // -----------------------------------------------------------------------
+
+    /**
+     * Send a checklist.
+     *
+     * @param  array<int, array{text: string, checked: bool}>  $checklist
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function sendChecklist(
+        string $chatId,
+        string $title,
+        array $checklist,
+        array $options = [],
+    ): array {
+        return $this->bot()->call('sendChecklist', array_merge([
+            'chat_id' => $chatId,
+            'title' => $title,
+            'checklist' => $checklist,
+        ], $options));
+    }
+
+    // -----------------------------------------------------------------------
     // Fluent builders
     // -----------------------------------------------------------------------
 
