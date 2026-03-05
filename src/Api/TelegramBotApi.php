@@ -13,6 +13,9 @@ class TelegramBotApi
         private readonly string $token,
         private readonly string $baseUrl = 'https://api.telegram.org',
         private readonly int $timeout = 10,
+        private readonly int $maxRetries = 3,
+        private readonly int $baseDelayMs = 1000,
+        private readonly bool $useJitter = true,
     ) {}
 
     /**
@@ -32,21 +35,51 @@ class TelegramBotApi
         if (! $response->successful()) {
             $exception = TelegramApiException::fromResponse($response, $method);
 
-            if ($exception->isRateLimited() && $exception->getRetryAfter() !== null) {
-                sleep($exception->getRetryAfter());
-                $response = Http::timeout($this->timeout)->post($url, $params);
-
-                if (! $response->successful()) {
-                    throw TelegramApiException::fromResponse($response, $method);
-                }
-
-                return $response->json();
+            if ($exception->isRateLimited()) {
+                return $this->retryWithBackoff($url, $params, $method, $exception);
             }
 
             throw $exception;
         }
 
         return $response->json();
+    }
+
+    /**
+     * Retry a failed request with exponential backoff.
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     *
+     * @throws TelegramApiException
+     */
+    private function retryWithBackoff(string $url, array $params, string $method, TelegramApiException $lastException): array
+    {
+        for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
+            $delayMs = $lastException->getRetryAfter() !== null
+                ? $lastException->getRetryAfter() * 1000
+                : $this->baseDelayMs * (2 ** ($attempt - 1));
+
+            if ($this->useJitter && $delayMs > 0) {
+                $delayMs += random_int(0, (int) ($delayMs * 0.5));
+            }
+
+            usleep($delayMs * 1000);
+
+            $response = Http::timeout($this->timeout)->post($url, $params);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            $lastException = TelegramApiException::fromResponse($response, $method);
+
+            if (! $lastException->isRateLimited()) {
+                throw $lastException;
+            }
+        }
+
+        throw $lastException;
     }
 
     /**
@@ -101,5 +134,20 @@ class TelegramBotApi
     public function getTimeout(): int
     {
         return $this->timeout;
+    }
+
+    public function getMaxRetries(): int
+    {
+        return $this->maxRetries;
+    }
+
+    public function getBaseDelayMs(): int
+    {
+        return $this->baseDelayMs;
+    }
+
+    public function getUseJitter(): bool
+    {
+        return $this->useJitter;
     }
 }

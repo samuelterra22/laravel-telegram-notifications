@@ -15,6 +15,11 @@ beforeEach(function () {
         defaultBot: 'default',
         baseUrl: 'https://api.telegram.org',
         timeout: 10,
+        retryConfig: [
+            'max_attempts' => 3,
+            'base_delay_ms' => 1,
+            'use_jitter' => false,
+        ],
     );
 });
 
@@ -98,8 +103,8 @@ it('handles 429 rate limit with successful retry', function () {
         'api.telegram.org/*' => Http::sequence()
             ->push([
                 'ok' => false,
-                'description' => 'Too Many Requests: retry after 1',
-                'parameters' => ['retry_after' => 1],
+                'description' => 'Too Many Requests: retry after 0',
+                'parameters' => ['retry_after' => 0],
             ], 429)
             ->push([
                 'ok' => true,
@@ -115,28 +120,19 @@ it('handles 429 rate limit with successful retry', function () {
     Http::assertSentCount(2);
 });
 
-it('throws on 429 rate limit when retry also fails', function () {
-    Http::fake([
-        'api.telegram.org/*' => Http::sequence()
-            ->push([
-                'ok' => false,
-                'description' => 'Too Many Requests: retry after 1',
-                'parameters' => ['retry_after' => 1],
-            ], 429)
-            ->push([
-                'ok' => false,
-                'description' => 'Too Many Requests: retry after 30',
-                'parameters' => ['retry_after' => 30],
-            ], 429),
-    ]);
+it('throws on 429 rate limit when all retries also fail', function () {
+    Http::fake(fn () => Http::response([
+        'ok' => false,
+        'description' => 'Too Many Requests: retry after 0',
+        'parameters' => ['retry_after' => 0],
+    ], 429));
 
     try {
         $this->telegram->sendMessage('-100123', 'Double rate limit');
         $this->fail('Expected TelegramApiException');
     } catch (TelegramApiException $e) {
         expect($e->getStatusCode())->toBe(429)
-            ->and($e->isRateLimited())->toBeTrue()
-            ->and($e->getRetryAfter())->toBe(30);
+            ->and($e->isRateLimited())->toBeTrue();
     }
 });
 

@@ -61,6 +61,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Retry Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure retry behavior for rate-limited (429) API responses.
+    | max_attempts: How many times to retry after a 429 response.
+    | base_delay_ms: Base delay in milliseconds for exponential backoff.
+    | use_jitter: Add random jitter to prevent thundering herd.
+    |
+    */
+
+    'retry' => [
+        'max_attempts' => (int) env('TELEGRAM_RETRY_MAX_ATTEMPTS', 3),
+        'base_delay_ms' => (int) env('TELEGRAM_RETRY_BASE_DELAY_MS', 1000),
+        'use_jitter' => (bool) env('TELEGRAM_RETRY_USE_JITTER', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Logging Configuration
     |--------------------------------------------------------------------------
     |

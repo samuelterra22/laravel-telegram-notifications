@@ -11,6 +11,10 @@ beforeEach(function () {
     $this->api = new TelegramBotApi(
         token: 'test-token',
         baseUrl: 'https://api.telegram.org',
+        timeout: 10,
+        maxRetries: 3,
+        baseDelayMs: 1,
+        useJitter: false,
     );
 });
 
@@ -171,7 +175,7 @@ it('callSilent returns false when call throws TelegramApiException', function ()
     expect($result)->toBeFalse();
 });
 
-it('does not retry on 429 without retry_after value', function () {
+it('retries on 429 without retry_after value using exponential backoff', function () {
     Http::fake([
         'api.telegram.org/*' => Http::response([
             'ok' => false,
@@ -184,7 +188,8 @@ it('does not retry on 429 without retry_after value', function () {
     } catch (TelegramApiException $e) {
         expect($e->getStatusCode())->toBe(429)
             ->and($e->getRetryAfter())->toBeNull();
-        Http::assertSentCount(1);
+        // 1 initial + 3 retries (default maxRetries)
+        Http::assertSentCount(4);
 
         return;
     }

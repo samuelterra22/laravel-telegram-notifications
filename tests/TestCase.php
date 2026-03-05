@@ -28,5 +28,8 @@ class TestCase extends Orchestra
         config()->set('telegram-notifications.logging.bot', 'default');
         config()->set('telegram-notifications.logging.chat_id', '-1001234567890');
         config()->set('telegram-notifications.logging.topic_id', '99');
+        config()->set('telegram-notifications.retry.max_attempts', 3);
+        config()->set('telegram-notifications.retry.base_delay_ms', 10);
+        config()->set('telegram-notifications.retry.use_jitter', false);
     }
 }

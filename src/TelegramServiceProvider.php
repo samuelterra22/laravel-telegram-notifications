@@ -37,6 +37,7 @@ class TelegramServiceProvider extends PackageServiceProvider
                 defaultBot: $config['default'] ?? 'default',
                 baseUrl: $config['api_base_url'] ?? 'https://api.telegram.org',
                 timeout: $config['timeout'] ?? 10,
+                retryConfig: $config['retry'] ?? [],
             );
         });
 

@@ -18,11 +18,15 @@ class Telegram
     /**
      * @param  array<string, array{token: string, chat_id?: string|null, topic_id?: string|null}>  $botsConfig
      */
+    /**
+     * @param  array<string, mixed>  $retryConfig
+     */
     public function __construct(
         private readonly array $botsConfig,
         private readonly string $defaultBot,
         private readonly string $baseUrl,
         private readonly int $timeout,
+        private readonly array $retryConfig = [],
     ) {}
 
     /**
@@ -40,6 +44,9 @@ class Telegram
                 token: $config['token'],
                 baseUrl: $this->baseUrl,
                 timeout: $this->timeout,
+                maxRetries: $this->retryConfig['max_attempts'] ?? 3,
+                baseDelayMs: $this->retryConfig['base_delay_ms'] ?? 1000,
+                useJitter: $this->retryConfig['use_jitter'] ?? true,
             );
         }
 

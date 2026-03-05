@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SamuelTerra22\TelegramNotifications\Fluent;
 
 use SamuelTerra22\TelegramNotifications\Contracts\ReplyMarkupInterface;
+use SamuelTerra22\TelegramNotifications\Jobs\SendTelegramBroadcast;
 use SamuelTerra22\TelegramNotifications\Responses\TelegramResponse;
 use SamuelTerra22\TelegramNotifications\Telegram;
 
@@ -96,6 +97,36 @@ class PendingBroadcast
         $this->onFailureCallback = $callback;
 
         return $this;
+    }
+
+    /**
+     * Dispatch the broadcast as a queued job.
+     */
+    public function queue(?string $queue = null, ?string $connection = null): void
+    {
+        $options = array_filter([
+            'disable_notification' => $this->disableNotification ?: null,
+            'protect_content' => $this->protectContent ?: null,
+            'reply_markup' => $this->replyMarkup,
+        ]);
+
+        $job = new SendTelegramBroadcast(
+            text: $this->text,
+            chatIds: $this->chatIds,
+            parseMode: $this->parseMode,
+            options: $options,
+            rateLimitMs: $this->rateLimitMs,
+        );
+
+        if ($queue !== null) {
+            $job->onQueue($queue);
+        }
+
+        if ($connection !== null) {
+            $job->onConnection($connection);
+        }
+
+        dispatch($job);
     }
 
     /**

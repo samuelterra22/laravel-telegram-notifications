@@ -10,10 +10,14 @@ beforeEach(function () {
     $this->api = new TelegramBotApi(
         token: 'test-token',
         baseUrl: 'https://api.telegram.org',
+        timeout: 10,
+        maxRetries: 3,
+        baseDelayMs: 1,
+        useJitter: false,
     );
 });
 
-it('throws immediately on 429 without retry_after parameter', function () {
+it('retries on 429 without retry_after parameter using backoff', function () {
     Http::fake([
         'api.telegram.org/*' => Http::response([
             'ok' => false,
@@ -27,8 +31,8 @@ it('throws immediately on 429 without retry_after parameter', function () {
         expect($e->isRateLimited())->toBeTrue()
             ->and($e->getRetryAfter())->toBeNull();
 
-        // Only 1 request: no retry because retry_after is null
-        Http::assertSentCount(1);
+        // 1 initial + 3 retries (maxRetries=3)
+        Http::assertSentCount(4);
 
         return;
     }
@@ -58,7 +62,7 @@ it('retries immediately on 429 with retry_after=0', function () {
     Http::assertSentCount(2);
 });
 
-it('throws on 429 with non-JSON body', function () {
+it('retries on 429 with non-JSON body using backoff', function () {
     Http::fake([
         'api.telegram.org/*' => Http::response('<html>Rate Limited</html>', 429),
     ]);
@@ -70,8 +74,8 @@ it('throws on 429 with non-JSON body', function () {
             ->and($e->getRetryAfter())->toBeNull()
             ->and($e->getTelegramDescription())->toBe('Unknown error');
 
-        // No retry because retry_after is null
-        Http::assertSentCount(1);
+        // 1 initial + 3 retries (maxRetries=3), all with backoff
+        Http::assertSentCount(4);
 
         return;
     }
@@ -101,28 +105,21 @@ it('does not retry non-429 errors', function () {
     $this->fail('Expected TelegramApiException');
 });
 
-it('throws after double 429 when retry also returns 429', function () {
-    Http::fake([
-        'api.telegram.org/*' => Http::sequence()
-            ->push([
-                'ok' => false,
-                'description' => 'Too Many Requests: retry after 1',
-                'parameters' => ['retry_after' => 1],
-            ], 429)
-            ->push([
-                'ok' => false,
-                'description' => 'Too Many Requests: retry after 60',
-                'parameters' => ['retry_after' => 60],
-            ], 429),
-    ]);
+it('throws after exhausting retries when all responses are 429', function () {
+    Http::fake(fn () => Http::response([
+        'ok' => false,
+        'description' => 'Too Many Requests: retry after 0',
+        'parameters' => ['retry_after' => 0],
+    ], 429));
 
     try {
         $this->api->call('sendMessage', ['chat_id' => '-100123', 'text' => 'test']);
     } catch (TelegramApiException $e) {
         expect($e->getStatusCode())->toBe(429)
-            ->and($e->getRetryAfter())->toBe(60);
+            ->and($e->isRateLimited())->toBeTrue();
 
-        Http::assertSentCount(2);
+        // 1 initial + 3 retries (maxRetries=3)
+        Http::assertSentCount(4);
 
         return;
     }
