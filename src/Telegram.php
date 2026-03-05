@@ -772,6 +772,193 @@ class Telegram
     }
 
     // -----------------------------------------------------------------------
+    // Payment methods
+    // -----------------------------------------------------------------------
+
+    /**
+     * Send an invoice.
+     *
+     * @param  array<int, array{label: string, amount: int}>  $prices
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function sendInvoice(
+        string $chatId,
+        string $title,
+        string $description,
+        string $payload,
+        string $currency,
+        array $prices,
+        ?string $providerToken = null,
+        array $options = [],
+    ): array {
+        return $this->bot()->call('sendInvoice', array_merge(array_filter([
+            'chat_id' => $chatId,
+            'title' => $title,
+            'description' => $description,
+            'payload' => $payload,
+            'currency' => $currency,
+            'prices' => $prices,
+            'provider_token' => $providerToken,
+        ]), $this->encodeReplyMarkup($options)));
+    }
+
+    /**
+     * Create an invoice link.
+     *
+     * @param  array<int, array{label: string, amount: int}>  $prices
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function createInvoiceLink(
+        string $title,
+        string $description,
+        string $payload,
+        string $currency,
+        array $prices,
+        ?string $providerToken = null,
+        array $options = [],
+    ): array {
+        return $this->bot()->call('createInvoiceLink', array_merge(array_filter([
+            'title' => $title,
+            'description' => $description,
+            'payload' => $payload,
+            'currency' => $currency,
+            'prices' => $prices,
+            'provider_token' => $providerToken,
+        ]), $options));
+    }
+
+    /**
+     * Answer a pre-checkout query.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function answerPreCheckoutQuery(
+        string $preCheckoutQueryId,
+        bool $ok,
+        ?string $errorMessage = null,
+        array $options = [],
+    ): array {
+        return $this->bot()->call('answerPreCheckoutQuery', array_merge(array_filter([
+            'pre_checkout_query_id' => $preCheckoutQueryId,
+            'ok' => $ok,
+            'error_message' => $errorMessage,
+        ], fn ($v) => $v !== null), $options));
+    }
+
+    /**
+     * Answer a shipping query.
+     *
+     * @param  array<int, array<string, mixed>>|null  $shippingOptions
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function answerShippingQuery(
+        string $shippingQueryId,
+        bool $ok,
+        ?array $shippingOptions = null,
+        ?string $errorMessage = null,
+        array $options = [],
+    ): array {
+        return $this->bot()->call('answerShippingQuery', array_merge(array_filter([
+            'shipping_query_id' => $shippingQueryId,
+            'ok' => $ok,
+            'shipping_options' => $shippingOptions,
+            'error_message' => $errorMessage,
+        ], fn ($v) => $v !== null), $options));
+    }
+
+    /**
+     * Refund a Telegram Stars payment.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function refundStarPayment(int|string $userId, string $telegramPaymentChargeId, array $options = []): array
+    {
+        return $this->bot()->call('refundStarPayment', array_merge([
+            'user_id' => $userId,
+            'telegram_payment_charge_id' => $telegramPaymentChargeId,
+        ], $options));
+    }
+
+    /**
+     * Get Telegram Stars transactions.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function getStarTransactions(?int $offset = null, ?int $limit = null, array $options = []): array
+    {
+        return $this->bot()->call('getStarTransactions', array_merge(array_filter([
+            'offset' => $offset,
+            'limit' => $limit,
+        ]), $options));
+    }
+
+    /**
+     * Send paid media.
+     *
+     * @param  array<int, array<string, mixed>>  $media
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function sendPaidMedia(
+        string $chatId,
+        int $starCount,
+        array $media,
+        ?string $caption = null,
+        ?string $parseMode = 'HTML',
+        array $options = [],
+    ): array {
+        return $this->bot()->call('sendPaidMedia', array_merge(array_filter([
+            'chat_id' => $chatId,
+            'star_count' => $starCount,
+            'media' => $media,
+            'caption' => $caption,
+            'parse_mode' => $caption !== null ? $parseMode : null,
+        ]), $this->encodeReplyMarkup($options)));
+    }
+
+    // -----------------------------------------------------------------------
+    // Gift methods
+    // -----------------------------------------------------------------------
+
+    /**
+     * Send a gift to a user.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function sendGift(
+        int|string $userId,
+        string $giftId,
+        ?string $text = null,
+        ?string $textParseMode = null,
+        array $options = [],
+    ): array {
+        return $this->bot()->call('sendGift', array_merge(array_filter([
+            'user_id' => $userId,
+            'gift_id' => $giftId,
+            'text' => $text,
+            'text_parse_mode' => $textParseMode,
+        ]), $options));
+    }
+
+    /**
+     * Get available gifts.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function getAvailableGifts(array $options = []): array
+    {
+        return $this->bot()->call('getAvailableGifts', $options);
+    }
+
+    // -----------------------------------------------------------------------
     // Reactions
     // -----------------------------------------------------------------------
 
