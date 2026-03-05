@@ -257,3 +257,33 @@ it('creates empty message via static factory', function () {
         ->and($message->getChatId())->toBeNull()
         ->and($message->getBot())->toBeNull();
 });
+
+it('adds expandable blockquote HTML', function () {
+    $message = TelegramMessage::create()
+        ->expandableQuote('Long quoted text here');
+
+    expect($message->getContent())->toBe('<blockquote expandable>Long quoted text here</blockquote>');
+});
+
+it('adds expandable blockquote after existing content', function () {
+    $message = TelegramMessage::create('First line')
+        ->expandableQuote('Quoted text');
+
+    expect($message->getContent())->toBe("First line\n<blockquote expandable>Quoted text</blockquote>");
+});
+
+it('sets parse mode to MarkdownV2 with escapedMarkdown()', function () {
+    $message = TelegramMessage::create()
+        ->escapedMarkdown('Hello *world*');
+
+    $array = $message->toArray();
+
+    expect($array['parse_mode'])->toBe('MarkdownV2');
+});
+
+it('escapes the text content with escapedMarkdown()', function () {
+    $message = TelegramMessage::create()
+        ->escapedMarkdown('Price: $10.00 (USD)');
+
+    expect($message->getContent())->toBe('Price: $10\.00 \(USD\)');
+});

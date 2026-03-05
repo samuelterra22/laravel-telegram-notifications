@@ -102,6 +102,28 @@ class TelegramMessage implements TelegramMessageInterface
         return $this->line("<blockquote>{$text}</blockquote>");
     }
 
+    public function expandableQuote(string $text): static
+    {
+        return $this->line("<blockquote expandable>{$text}</blockquote>");
+    }
+
+    public function view(string $view, array $data = [], ?string $parseMode = null): static
+    {
+        $this->content = view($view, $data)->render();
+        if ($parseMode !== null) {
+            $this->parseMode = ParseMode::from($parseMode);
+        }
+
+        return $this;
+    }
+
+    public function escapedMarkdown(string $text): static
+    {
+        $this->parseMode = ParseMode::MarkdownV2;
+
+        return $this->line(\SamuelTerra22\TelegramNotifications\Helpers\MarkdownV2::escape($text));
+    }
+
     public function button(string $text, string $url, int $columns = 2): static
     {
         $this->inlineKeyboard ??= InlineKeyboard::make();
@@ -231,6 +253,7 @@ class TelegramMessage implements TelegramMessageInterface
                 ? ['message_id' => $this->replyToMessageId]
                 : null,
             'reply_markup' => $replyMarkup,
+            'message_effect_id' => $this->messageEffectId,
         ]);
     }
 

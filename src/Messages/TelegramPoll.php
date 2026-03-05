@@ -146,6 +146,7 @@ class TelegramPoll implements TelegramMessageInterface
             'message_thread_id' => $this->topicId,
             'disable_notification' => $this->disableNotification ?: null,
             'protect_content' => $this->protectContent ?: null,
+            'message_effect_id' => $this->messageEffectId,
         ], fn ($value) => $value !== null);
     }
 

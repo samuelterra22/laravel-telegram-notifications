@@ -104,6 +104,7 @@ class TelegramDocument implements TelegramMessageInterface
             'protect_content' => $this->protectContent ?: null,
             'disable_content_type_detection' => $this->disableContentTypeDetection ?: null,
             'reply_markup' => $this->keyboard?->toArray(),
+            'message_effect_id' => $this->messageEffectId,
         ]);
     }
 

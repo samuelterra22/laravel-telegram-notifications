@@ -141,6 +141,7 @@ class TelegramVenue implements TelegramMessageInterface
             'disable_notification' => $this->disableNotification ?: null,
             'protect_content' => $this->protectContent ?: null,
             'reply_markup' => $this->keyboard?->toArray(),
+            'message_effect_id' => $this->messageEffectId,
         ]);
     }
 

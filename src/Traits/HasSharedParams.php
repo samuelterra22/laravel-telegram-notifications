@@ -12,6 +12,8 @@ trait HasSharedParams
 
     private ?string $bot = null;
 
+    private ?string $messageEffectId = null;
+
     public function to(string $chatId): static
     {
         $this->chatId = $chatId;
@@ -46,5 +48,17 @@ trait HasSharedParams
     public function getBot(): ?string
     {
         return $this->bot;
+    }
+
+    public function effect(string $effectId): static
+    {
+        $this->messageEffectId = $effectId;
+
+        return $this;
+    }
+
+    public function getMessageEffectId(): ?string
+    {
+        return $this->messageEffectId;
     }
 }
