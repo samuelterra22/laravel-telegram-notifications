@@ -16,6 +16,7 @@ class TelegramBotApi
         private readonly int $maxRetries = 3,
         private readonly int $baseDelayMs = 1000,
         private readonly bool $useJitter = true,
+        private readonly ?string $username = null,
     ) {}
 
     /**
@@ -149,5 +150,10 @@ class TelegramBotApi
     public function getUseJitter(): bool
     {
         return $this->useJitter;
+    }
+
+    public function getUsername(): ?string
+    {
+        return $this->username;
     }
 }

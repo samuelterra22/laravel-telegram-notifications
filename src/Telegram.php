@@ -47,6 +47,7 @@ class Telegram
                 maxRetries: $this->retryConfig['max_attempts'] ?? 3,
                 baseDelayMs: $this->retryConfig['base_delay_ms'] ?? 1000,
                 useJitter: $this->retryConfig['use_jitter'] ?? true,
+                username: $config['username'] ?? null,
             );
         }
 
@@ -1275,6 +1276,34 @@ class Telegram
     public function getBotsConfig(): array
     {
         return $this->botsConfig;
+    }
+
+    /**
+     * Get the username for the default or a specific bot.
+     */
+    public function getUsername(?string $botName = null): ?string
+    {
+        return $this->bot($botName)->getUsername();
+    }
+
+    /**
+     * Generate a t.me integration link for a bot.
+     */
+    public function getIntegrationLink(?string $startParam = null, ?string $botName = null): ?string
+    {
+        $username = $this->getUsername($botName);
+
+        if (! $username) {
+            return null;
+        }
+
+        $link = "https://t.me/{$username}";
+
+        if ($startParam !== null) {
+            $link .= "?start={$startParam}";
+        }
+
+        return $link;
     }
 
     // -----------------------------------------------------------------------

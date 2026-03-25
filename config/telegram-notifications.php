@@ -27,11 +27,13 @@ return [
     'bots' => [
         'default' => [
             'token' => env('TELEGRAM_BOT_TOKEN'),
+            'username' => env('TELEGRAM_BOT_USERNAME'),
             'chat_id' => env('TELEGRAM_CHAT_ID'),
             'topic_id' => env('TELEGRAM_TOPIC_ID'),
         ],
         // 'alerts' => [
         //     'token' => env('TELEGRAM_ALERTS_BOT_TOKEN'),
+        //     'username' => env('TELEGRAM_ALERTS_BOT_USERNAME'),
         //     'chat_id' => env('TELEGRAM_ALERTS_CHAT_ID'),
         // ],
     ],

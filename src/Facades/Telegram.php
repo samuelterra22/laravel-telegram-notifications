@@ -63,6 +63,8 @@ use SamuelTerra22\TelegramNotifications\Fluent\PendingMessage;
  * @method static PendingBroadcast broadcast(array $chatIds = [])
  * @method static string getDefaultBot()
  * @method static array getBotsConfig()
+ * @method static string|null getUsername(?string $botName = null)
+ * @method static string|null getIntegrationLink(?string $startParam = null, ?string $botName = null)
  *
  * @see \SamuelTerra22\TelegramNotifications\Telegram
  */

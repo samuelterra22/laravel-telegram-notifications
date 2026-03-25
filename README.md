@@ -126,6 +126,7 @@ All available environment variables:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `TELEGRAM_BOT_TOKEN` | Bot token from @BotFather | *(required)* |
+| `TELEGRAM_BOT_USERNAME` | Bot username (without @) for integration links | `null` |
 | `TELEGRAM_CHAT_ID` | Default chat ID for the bot | `null` |
 | `TELEGRAM_TOPIC_ID` | Default forum topic ID | `null` |
 | `TELEGRAM_BOT` | Name of the default bot | `default` |
@@ -149,11 +150,13 @@ return [
     'bots' => [
         'default' => [
             'token' => env('TELEGRAM_BOT_TOKEN'),
+            'username' => env('TELEGRAM_BOT_USERNAME'),
             'chat_id' => env('TELEGRAM_CHAT_ID'),
             'topic_id' => env('TELEGRAM_TOPIC_ID'),
         ],
         'alerts' => [
             'token' => env('TELEGRAM_ALERTS_BOT_TOKEN'),
+            'username' => env('TELEGRAM_ALERTS_BOT_USERNAME'),
             'chat_id' => env('TELEGRAM_ALERTS_CHAT_ID'),
         ],
     ],
@@ -1557,14 +1560,17 @@ The logging handler (`TelegramHandler`) always uses `callSilent()` to ensure log
 'bots' => [
     'default' => [
         'token' => env('TELEGRAM_BOT_TOKEN'),
+        'username' => env('TELEGRAM_BOT_USERNAME'),
         'chat_id' => env('TELEGRAM_CHAT_ID'),
     ],
     'alerts' => [
         'token' => env('TELEGRAM_ALERTS_BOT_TOKEN'),
+        'username' => env('TELEGRAM_ALERTS_BOT_USERNAME'),
         'chat_id' => env('TELEGRAM_ALERTS_CHAT_ID'),
     ],
     'support' => [
         'token' => env('TELEGRAM_SUPPORT_BOT_TOKEN'),
+        'username' => env('TELEGRAM_SUPPORT_BOT_USERNAME'),
         'chat_id' => env('TELEGRAM_SUPPORT_CHAT_ID'),
         'topic_id' => env('TELEGRAM_SUPPORT_TOPIC_ID'),
     ],
@@ -1597,6 +1603,26 @@ Telegram::message($chatId)->text('Hello')->send();
 // Access bot config
 Telegram::getDefaultBot();   // 'default'
 Telegram::getBotsConfig();   // full bots config array
+```
+
+### Bot Usernames & Integration Links
+
+Each bot can have its own `username` for generating `t.me` integration links:
+
+```php
+// Get bot username
+Telegram::getUsername();           // 'your_bot'
+Telegram::getUsername('alerts');   // 'alerts_bot'
+
+// Generate integration links
+Telegram::getIntegrationLink();
+// => 'https://t.me/your_bot'
+
+Telegram::getIntegrationLink('abc123');
+// => 'https://t.me/your_bot?start=abc123'
+
+Telegram::getIntegrationLink('start_param', 'alerts');
+// => 'https://t.me/alerts_bot?start=start_param'
 ```
 
 Bots are lazy-loaded: the `TelegramBotApi` instance for each bot is only created when first accessed via `bot()`.
