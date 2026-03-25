@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request;
 use SamuelTerra22\TelegramNotifications\Http\Middleware\VerifyTelegramWebhook;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 it('allows request when no secret is configured', function () {
     config()->set('telegram-notifications.webhook_secret', null);
@@ -49,7 +50,7 @@ it('rejects request with invalid secret token', function () {
     $middleware = new VerifyTelegramWebhook;
 
     $middleware->handle($request, fn ($req) => response('OK'));
-})->throws(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+})->throws(HttpException::class);
 
 it('rejects request with missing secret token header', function () {
     config()->set('telegram-notifications.webhook_secret', 'my-secret-token');
@@ -59,7 +60,7 @@ it('rejects request with missing secret token header', function () {
     $middleware = new VerifyTelegramWebhook;
 
     $middleware->handle($request, fn ($req) => response('OK'));
-})->throws(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+})->throws(HttpException::class);
 
 it('returns 403 status code for invalid token', function () {
     config()->set('telegram-notifications.webhook_secret', 'my-secret-token');
@@ -71,7 +72,7 @@ it('returns 403 status code for invalid token', function () {
 
     try {
         $middleware->handle($request, fn ($req) => response('OK'));
-    } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+    } catch (HttpException $e) {
         expect($e->getStatusCode())->toBe(403);
 
         return;

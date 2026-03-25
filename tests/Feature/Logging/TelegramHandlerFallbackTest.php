@@ -3,9 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
+use Monolog\Handler\NullHandler;
 use Monolog\Level;
+use Monolog\Logger;
 use Monolog\LogRecord;
 use SamuelTerra22\TelegramNotifications\Api\TelegramBotApi;
+use SamuelTerra22\TelegramNotifications\Logging\CreateTelegramLogger;
 use SamuelTerra22\TelegramNotifications\Logging\TelegramHandler;
 
 /*
@@ -34,7 +37,7 @@ it('retries with plain text when HTML send fails', function () {
     $handler = new TelegramHandler(api: $api, chatId: '-100123', level: Level::Error);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Something went wrong',
@@ -66,7 +69,7 @@ it('does not retry when HTML send succeeds', function () {
     $handler = new TelegramHandler(api: $api, chatId: '-100123', level: Level::Error);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test message',
@@ -94,7 +97,7 @@ it('preserves topic_id in the plain text fallback call', function () {
     $handler = new TelegramHandler(api: $api, chatId: '-100123', topicId: '42', level: Level::Error);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Error with topic',
@@ -126,7 +129,7 @@ it('preserves chat_id in the plain text fallback call', function () {
     $handler = new TelegramHandler(api: $api, chatId: '-100999', level: Level::Error);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test',
@@ -157,7 +160,7 @@ it('strips all HTML tags from the fallback message', function () {
 
     $exception = new RuntimeException('Test exception');
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Error occurred',
@@ -188,7 +191,7 @@ it('never throws even when both HTML and plain text calls fail', function () {
     $handler = new TelegramHandler(api: $api, chatId: '-100123', level: Level::Error);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test',
@@ -220,7 +223,7 @@ it('closes unclosed <pre> tag when truncation cuts inside trace block', function
     $exception = new RuntimeException(str_repeat('E', 2000));
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: str_repeat('M', 1500),
@@ -255,7 +258,7 @@ it('closes unclosed <b> tag when truncation cuts inside bold text', function () 
     $longMessage = str_repeat('X', 5000);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: $longMessage,
@@ -288,7 +291,7 @@ it('produces valid HTML after truncation with exception context', function () {
     $exception = new RuntimeException(str_repeat('Exception message ', 300));
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: str_repeat('Log message ', 200),
@@ -322,7 +325,7 @@ it('does not add unnecessary closing tags when truncation happens outside HTML t
 
     // Long plain message with no exception — all <b> tags are self-closing in the header
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: str_repeat('A', 5000),
@@ -351,7 +354,7 @@ it('does not truncate messages exactly at 4096 characters', function () {
 
     // First determine the overhead
     $emptyRecord = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: '',
@@ -374,7 +377,7 @@ it('does not truncate messages exactly at 4096 characters', function () {
 
     $messageLen = 4096 - $overhead;
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: str_repeat('Z', $messageLen),
@@ -401,7 +404,7 @@ it('truncated message never exceeds 4096 characters regardless of open tags', fu
     $exception = new RuntimeException(str_repeat('X', 10000));
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: str_repeat('Y', 10000),
@@ -424,38 +427,38 @@ it('truncated message never exceeds 4096 characters regardless of open tags', fu
 it('returns NullHandler when enabled is false in logging config', function () {
     config()->set('telegram-notifications.logging.enabled', false);
 
-    $factory = new \SamuelTerra22\TelegramNotifications\Logging\CreateTelegramLogger;
+    $factory = new CreateTelegramLogger;
     $logger = $factory(['level' => 'error']);
 
-    expect($logger)->toBeInstanceOf(\Monolog\Logger::class)
+    expect($logger)->toBeInstanceOf(Logger::class)
         ->and($logger->getName())->toBe('telegram')
         ->and($logger->getHandlers())->toHaveCount(1)
-        ->and($logger->getHandlers()[0])->toBeInstanceOf(\Monolog\Handler\NullHandler::class);
+        ->and($logger->getHandlers()[0])->toBeInstanceOf(NullHandler::class);
 });
 
 it('returns NullHandler when enabled is false in channel config', function () {
     config()->set('telegram-notifications.logging.enabled', true);
 
-    $factory = new \SamuelTerra22\TelegramNotifications\Logging\CreateTelegramLogger;
+    $factory = new CreateTelegramLogger;
     $logger = $factory(['level' => 'error', 'enabled' => false]);
 
-    expect($logger)->toBeInstanceOf(\Monolog\Logger::class)
-        ->and($logger->getHandlers()[0])->toBeInstanceOf(\Monolog\Handler\NullHandler::class);
+    expect($logger)->toBeInstanceOf(Logger::class)
+        ->and($logger->getHandlers()[0])->toBeInstanceOf(NullHandler::class);
 });
 
 it('returns NullHandler when no enabled key is set anywhere', function () {
     config()->set('telegram-notifications.logging.enabled', null);
 
-    $factory = new \SamuelTerra22\TelegramNotifications\Logging\CreateTelegramLogger;
+    $factory = new CreateTelegramLogger;
     $logger = $factory(['level' => 'error']);
 
-    expect($logger->getHandlers()[0])->toBeInstanceOf(\Monolog\Handler\NullHandler::class);
+    expect($logger->getHandlers()[0])->toBeInstanceOf(NullHandler::class);
 });
 
 it('returns real TelegramHandler when enabled is true in logging config', function () {
     config()->set('telegram-notifications.logging.enabled', true);
 
-    $factory = new \SamuelTerra22\TelegramNotifications\Logging\CreateTelegramLogger;
+    $factory = new CreateTelegramLogger;
     $logger = $factory(['level' => 'error']);
 
     expect($logger->getHandlers()[0])->toBeInstanceOf(TelegramHandler::class);
@@ -464,7 +467,7 @@ it('returns real TelegramHandler when enabled is true in logging config', functi
 it('returns real TelegramHandler when enabled is true in channel config', function () {
     config()->set('telegram-notifications.logging.enabled', false);
 
-    $factory = new \SamuelTerra22\TelegramNotifications\Logging\CreateTelegramLogger;
+    $factory = new CreateTelegramLogger;
     $logger = $factory(['level' => 'error', 'enabled' => true]);
 
     expect($logger->getHandlers()[0])->toBeInstanceOf(TelegramHandler::class);
@@ -474,10 +477,10 @@ it('channel config enabled overrides logging config enabled', function () {
     // logging config says enabled, but channel config says disabled
     config()->set('telegram-notifications.logging.enabled', true);
 
-    $factory = new \SamuelTerra22\TelegramNotifications\Logging\CreateTelegramLogger;
+    $factory = new CreateTelegramLogger;
     $logger = $factory(['level' => 'error', 'enabled' => false]);
 
-    expect($logger->getHandlers()[0])->toBeInstanceOf(\Monolog\Handler\NullHandler::class);
+    expect($logger->getHandlers()[0])->toBeInstanceOf(NullHandler::class);
 });
 
 it('NullHandler logger does not send any HTTP requests', function () {
@@ -487,7 +490,7 @@ it('NullHandler logger does not send any HTTP requests', function () {
 
     config()->set('telegram-notifications.logging.enabled', false);
 
-    $factory = new \SamuelTerra22\TelegramNotifications\Logging\CreateTelegramLogger;
+    $factory = new CreateTelegramLogger;
     $logger = $factory(['level' => 'error']);
 
     $logger->error('This should not be sent to Telegram');

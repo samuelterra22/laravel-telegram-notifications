@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard;
 use SamuelTerra22\TelegramNotifications\Messages\TelegramContact;
 
 it('creates a contact message', function () {
@@ -56,7 +57,7 @@ it('sets silent and protected', function () {
 });
 
 it('sets keyboard', function () {
-    $keyboard = \SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard::make()
+    $keyboard = InlineKeyboard::make()
         ->url('Call', 'tel:+5511999999999');
 
     $message = TelegramContact::create()

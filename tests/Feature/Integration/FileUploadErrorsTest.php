@@ -19,7 +19,7 @@ it('throws when uploading a non-existent file', function () {
     ]);
 
     $this->api->upload('sendDocument', ['chat_id' => '-100123'], 'document', '/nonexistent/path/file.pdf');
-})->throws(\ErrorException::class);
+})->throws(ErrorException::class);
 
 it('throws when uploading with empty file path', function () {
     Http::fake([

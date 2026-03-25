@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use SamuelTerra22\TelegramNotifications\Enums\ParseMode;
+use SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard;
 use SamuelTerra22\TelegramNotifications\Messages\TelegramVideo;
 
 it('creates a video message', function () {
@@ -93,7 +95,7 @@ it('sets parse mode', function () {
         ->to('-100123')
         ->video('https://example.com/video.mp4')
         ->caption('Test')
-        ->parseMode(\SamuelTerra22\TelegramNotifications\Enums\ParseMode::MarkdownV2);
+        ->parseMode(ParseMode::MarkdownV2);
 
     $array = $message->toArray();
 
@@ -101,7 +103,7 @@ it('sets parse mode', function () {
 });
 
 it('sets keyboard', function () {
-    $keyboard = \SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard::make()
+    $keyboard = InlineKeyboard::make()
         ->url('Click', 'https://example.com');
 
     $message = TelegramVideo::create()

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Http;
 use Monolog\Level;
 use Monolog\LogRecord;
@@ -35,7 +36,7 @@ it('sends a log message to telegram', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Something went wrong',
@@ -80,7 +81,7 @@ it('includes emoji for each level', function () {
         ]);
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable,
+            datetime: new DateTimeImmutable,
             channel: 'test',
             level: $level,
             message: 'Test',
@@ -105,7 +106,7 @@ it('includes exception details in log', function () {
     $exception = new RuntimeException('Test exception');
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'An error occurred',
@@ -129,7 +130,7 @@ it('sends to topic when configured', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Error with topic',
@@ -149,7 +150,7 @@ it('respects minimum log level', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Debug,
         message: 'Debug message',
@@ -172,7 +173,7 @@ it('includes app name and environment', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test',
@@ -195,7 +196,7 @@ it('escapes HTML in messages', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: '<script>alert("xss")</script>',
@@ -220,7 +221,7 @@ it('truncates very long stack traces', function () {
     $exception = new RuntimeException(str_repeat('Error message ', 500));
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Long error',
@@ -243,14 +244,14 @@ it('truncates trace exceeding 2000 characters', function () {
 
     // Create an exception with a very long trace by nesting calls
     $createDeepException = function () {
-        $fn = function (int $depth) use (&$fn): \Throwable {
+        $fn = function (int $depth) use (&$fn): Throwable {
             if ($depth <= 0) {
                 return new RuntimeException('Deep exception');
             }
 
             try {
                 throw $fn($depth - 1);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 return new RuntimeException('Level '.$depth, 0, $e);
             }
         };
@@ -264,7 +265,7 @@ it('truncates trace exceeding 2000 characters', function () {
     expect(mb_strlen($exception->getTraceAsString()))->toBeGreaterThan(2000);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Deep error',
@@ -289,7 +290,7 @@ it('truncates overall message exceeding 4096 characters', function () {
     $longMessage = str_repeat('A very long error message. ', 200);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: $longMessage,
@@ -308,7 +309,7 @@ it('truncates overall message exceeding 4096 characters', function () {
 });
 
 it('includes authenticated user name and ID in log', function () {
-    $user = new class implements \Illuminate\Contracts\Auth\Authenticatable
+    $user = new class implements Authenticatable
     {
         public string $name = 'John Doe';
 
@@ -356,7 +357,7 @@ it('includes authenticated user name and ID in log', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test with user',
@@ -379,7 +380,7 @@ it('omits user line when no user is authenticated', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test without user',
@@ -395,7 +396,7 @@ it('omits user line when no user is authenticated', function () {
 });
 
 it('uses email when user has no name', function () {
-    $user = new class implements \Illuminate\Contracts\Auth\Authenticatable
+    $user = new class implements Authenticatable
     {
         public ?string $name = null;
 
@@ -443,7 +444,7 @@ it('uses email when user has no name', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test',
@@ -456,7 +457,7 @@ it('uses email when user has no name', function () {
 });
 
 it('shows only ID when user has no name or email', function () {
-    $user = new class implements \Illuminate\Contracts\Auth\Authenticatable
+    $user = new class implements Authenticatable
     {
         public ?string $name = null;
 
@@ -504,7 +505,7 @@ it('shows only ID when user has no name or email', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test',
@@ -517,7 +518,7 @@ it('shows only ID when user has no name or email', function () {
 });
 
 it('escapes HTML in user name', function () {
-    $user = new class implements \Illuminate\Contracts\Auth\Authenticatable
+    $user = new class implements Authenticatable
     {
         public string $name = '<b>Hacker</b>';
 
@@ -565,7 +566,7 @@ it('escapes HTML in user name', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test',
@@ -592,7 +593,7 @@ it('never throws on send failure', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test',

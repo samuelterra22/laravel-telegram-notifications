@@ -49,7 +49,7 @@ it('does not retry non-rate-limit errors', function () {
     $api = new TelegramBotApi('token', 'https://api.telegram.org', 10, maxRetries: 3, baseDelayMs: 1);
     try {
         $api->call('sendMessage', ['text' => 'Hi']);
-    } catch (\Throwable) {
+    } catch (Throwable) {
     }
     expect($callCount)->toBe(1);
 });

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard;
 use SamuelTerra22\TelegramNotifications\Messages\TelegramLocation;
 
 it('creates a location message', function () {
@@ -66,7 +67,7 @@ it('sets silent and protected', function () {
 });
 
 it('sets keyboard', function () {
-    $keyboard = \SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard::make()
+    $keyboard = InlineKeyboard::make()
         ->url('Open in Maps', 'https://maps.google.com');
 
     $message = TelegramLocation::create()

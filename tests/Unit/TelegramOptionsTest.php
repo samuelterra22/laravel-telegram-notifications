@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
+use SamuelTerra22\TelegramNotifications\Enums\ChatAction;
 use SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard;
 use SamuelTerra22\TelegramNotifications\Keyboards\ReplyKeyboard;
 use SamuelTerra22\TelegramNotifications\Keyboards\ReplyKeyboardRemove;
@@ -39,7 +40,7 @@ it('passes options to sendMessage', function () {
 });
 
 it('passes options to sendChatAction', function () {
-    $this->telegram->sendChatAction('-100123', \SamuelTerra22\TelegramNotifications\Enums\ChatAction::Typing, options: [
+    $this->telegram->sendChatAction('-100123', ChatAction::Typing, options: [
         'message_thread_id' => '42',
     ]);
 

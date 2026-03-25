@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Http;
 use Monolog\Logger;
 use SamuelTerra22\TelegramNotifications\Logging\CreateTelegramLogger;
 
@@ -9,7 +10,7 @@ it('throws for invalid level name', function () {
     $factory = new CreateTelegramLogger;
 
     $factory(['level' => 'invalid', 'enabled' => true]);
-})->throws(\UnhandledMatchError::class);
+})->throws(UnhandledMatchError::class);
 
 it('throws InvalidArgumentException for invalid bot name in logging config', function () {
     config()->set('telegram-notifications.logging.bot', 'nonexistent_bot');
@@ -60,13 +61,13 @@ it('chat_id from $config parameter overrides logging config', function () {
 
     // The handler should use the $config chat_id, not the logging config one
     // We verify by sending a log and checking the request
-    \Illuminate\Support\Facades\Http::fake([
-        'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => true]),
     ]);
 
     $logger->error('Test');
 
-    \Illuminate\Support\Facades\Http::assertSent(fn ($request) => $request['chat_id'] === '-100CONFIG');
+    Http::assertSent(fn ($request) => $request['chat_id'] === '-100CONFIG');
 });
 
 it('topic_id from $config parameter overrides logging config', function () {
@@ -76,13 +77,13 @@ it('topic_id from $config parameter overrides logging config', function () {
 
     $logger = $factory(['level' => 'error', 'topic_id' => '77', 'enabled' => true]);
 
-    \Illuminate\Support\Facades\Http::fake([
-        'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => true]),
     ]);
 
     $logger->error('Test');
 
-    \Illuminate\Support\Facades\Http::assertSent(fn ($request) => $request['message_thread_id'] === '77');
+    Http::assertSent(fn ($request) => $request['message_thread_id'] === '77');
 });
 
 it('null topic_id results in null topicId on handler', function () {
@@ -92,13 +93,13 @@ it('null topic_id results in null topicId on handler', function () {
 
     $logger = $factory(['level' => 'error', 'enabled' => true]);
 
-    \Illuminate\Support\Facades\Http::fake([
-        'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => true]),
     ]);
 
     $logger->error('Test');
 
-    \Illuminate\Support\Facades\Http::assertSent(function ($request) {
+    Http::assertSent(function ($request) {
         // message_thread_id should not be present when topicId is null
         return ! array_key_exists('message_thread_id', $request->data());
     });
@@ -111,11 +112,11 @@ it('non-null topic_id is cast to string', function () {
 
     $logger = $factory(['level' => 'error', 'enabled' => true]);
 
-    \Illuminate\Support\Facades\Http::fake([
-        'api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => true]),
+    Http::fake([
+        'api.telegram.org/*' => Http::response(['ok' => true, 'result' => true]),
     ]);
 
     $logger->error('Test');
 
-    \Illuminate\Support\Facades\Http::assertSent(fn ($request) => $request['message_thread_id'] === '42');
+    Http::assertSent(fn ($request) => $request['message_thread_id'] === '42');
 });

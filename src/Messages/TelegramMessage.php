@@ -6,6 +6,7 @@ namespace SamuelTerra22\TelegramNotifications\Messages;
 
 use SamuelTerra22\TelegramNotifications\Contracts\TelegramMessageInterface;
 use SamuelTerra22\TelegramNotifications\Enums\ParseMode;
+use SamuelTerra22\TelegramNotifications\Helpers\MarkdownV2;
 use SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard;
 use SamuelTerra22\TelegramNotifications\Keyboards\ReplyKeyboard;
 use SamuelTerra22\TelegramNotifications\Traits\HasSharedParams;
@@ -121,7 +122,7 @@ class TelegramMessage implements TelegramMessageInterface
     {
         $this->parseMode = ParseMode::MarkdownV2;
 
-        return $this->line(\SamuelTerra22\TelegramNotifications\Helpers\MarkdownV2::escape($text));
+        return $this->line(MarkdownV2::escape($text));
     }
 
     public function button(string $text, string $url, int $columns = 2): static

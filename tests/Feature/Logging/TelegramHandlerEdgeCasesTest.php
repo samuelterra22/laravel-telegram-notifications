@@ -27,7 +27,7 @@ beforeEach(function () {
 
 it('sends log with empty message string without crash', function () {
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: '',
@@ -43,7 +43,7 @@ it('sends log with empty message string without crash', function () {
 
 it('escapes HTML entities in message', function () {
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Value is "100 > 50 & 200 < 300"',
@@ -64,7 +64,7 @@ it('formats exception with empty message without crash', function () {
     $exception = new RuntimeException('');
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'An error occurred',
@@ -84,7 +84,7 @@ it('truncates log with very long exception message combined with context', funct
     $exception = new RuntimeException($longExceptionMessage);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: str_repeat('M', 3000),
@@ -100,7 +100,7 @@ it('truncates log with very long exception message combined with context', funct
 
 it('sends clean output with no context and no exception', function () {
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Warning,
         message: 'Simple warning',
@@ -124,7 +124,7 @@ it('crashes when config app.name is null due to strict types', function () {
     config()->set('app.name', null);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test',
@@ -139,7 +139,7 @@ it('uses configured app name and env in log output', function () {
     config()->set('app.env', 'staging');
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test',
@@ -156,7 +156,7 @@ it('uses configured app name and env in log output', function () {
 
 it('context with non-Throwable exception key skips exception block', function () {
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'An error occurred',
@@ -173,7 +173,7 @@ it('context with non-Throwable exception key skips exception block', function ()
 
 it('context with other keys besides exception does not trigger exception block', function () {
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Something happened',
@@ -196,7 +196,7 @@ it('exception trace at or under 2000 chars is NOT truncated', function () {
     // If trace is short enough, it should not be truncated
     if (mb_strlen($trace) <= 2000) {
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable,
+            datetime: new DateTimeImmutable,
             channel: 'test',
             level: Level::Error,
             message: 'Error',
@@ -249,7 +249,7 @@ it('long exception trace IS truncated with ellipsis suffix', function () {
     }
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Error',
@@ -270,7 +270,7 @@ it('message exactly 4096 chars after formatting is NOT truncated', function () {
     // We need to build a message where the final formatted string is exactly 4096 chars.
     // The format adds header/footer around the message. Let's calculate that overhead.
     $testRecord = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: '',
@@ -303,7 +303,7 @@ it('message exactly 4096 chars after formatting is NOT truncated', function () {
     ]);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: $paddedMessage,
@@ -323,7 +323,7 @@ it('message 4097 chars after formatting IS truncated', function () {
     $longMessage = str_repeat('Y', 5000);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: $longMessage,
@@ -347,7 +347,7 @@ it('API failure during log write returns false silently', function () {
     ]);
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'This should not crash',
@@ -370,7 +370,7 @@ it('includes message_thread_id when topic ID is set', function () {
     );
 
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test with topic',
@@ -385,7 +385,7 @@ it('includes message_thread_id when topic ID is set', function () {
 it('excludes message_thread_id when topic ID is null', function () {
     // The default handler in beforeEach has topicId=null
     $record = new LogRecord(
-        datetime: new \DateTimeImmutable,
+        datetime: new DateTimeImmutable,
         channel: 'test',
         level: Level::Error,
         message: 'Test without topic',

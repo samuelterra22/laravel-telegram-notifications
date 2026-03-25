@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use SamuelTerra22\TelegramNotifications\Enums\ParseMode;
+use SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard;
 use SamuelTerra22\TelegramNotifications\Messages\TelegramDocument;
 
 it('creates a document message', function () {
@@ -66,7 +68,7 @@ it('sets parse mode', function () {
         ->to('-100123')
         ->document('https://example.com/file.pdf')
         ->caption('Formatted caption')
-        ->parseMode(\SamuelTerra22\TelegramNotifications\Enums\ParseMode::MarkdownV2);
+        ->parseMode(ParseMode::MarkdownV2);
 
     $array = $message->toArray();
 
@@ -78,7 +80,7 @@ it('does not include parse mode when caption is empty', function () {
     $message = TelegramDocument::create()
         ->to('-100123')
         ->document('https://example.com/file.pdf')
-        ->parseMode(\SamuelTerra22\TelegramNotifications\Enums\ParseMode::MarkdownV2);
+        ->parseMode(ParseMode::MarkdownV2);
 
     $array = $message->toArray();
 
@@ -87,7 +89,7 @@ it('does not include parse mode when caption is empty', function () {
 });
 
 it('sets keyboard', function () {
-    $keyboard = \SamuelTerra22\TelegramNotifications\Keyboards\InlineKeyboard::make()
+    $keyboard = InlineKeyboard::make()
         ->url('Download', 'https://example.com/download');
 
     $message = TelegramDocument::create()
